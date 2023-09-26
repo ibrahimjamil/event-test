@@ -103,7 +103,7 @@ type Record struct {
 }
 
 type Event struct {
-	Records []Record `json:"Records"`
+	Records Record `json:"Records"`
 }
 
 type Response struct {
@@ -112,7 +112,7 @@ type Response struct {
 }
 
 func handler(event Event) (interface{}, error) {
-	fmt.Printf("event-source", event.Records[0].EventSource)
+	fmt.Printf("event-source", event.Records.EventSource)
 	// fmt.Printf(event.Records[0].EventSource)
 	// if apiGatewayEvent, ok := request.(events.APIGatewayProxyRequest); ok {
 	// 	return handleAPIGatewayEvent(apiGatewayEvent)
