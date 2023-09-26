@@ -96,9 +96,9 @@ func handleCloudWatchEvent(event events.CloudWatchEvent) (interface{}, error) {
 }
 
 func handler(request interface{}) (interface{}, error) {
-	fmt.Printf("Received event: %+v\n", request)
 	switch event := request.(type) {
 	case events.APIGatewayProxyRequest:
+		fmt.Printf("Received event: %+v\n", event)
 		// This block handles API Gateway events
 		return handleAPIGatewayEvent(event)
 	case events.CloudWatchEvent:
