@@ -22,7 +22,7 @@ jobs:
           export GOOS=linux
           export GOARCH=amd64
           export CGO_ENABLED=0
-          go build -o bootstrap .
+          go build -o bootstrap main.go
 
       - name: Zip Golang build files
         working-directory: ${{ github.workspace }}
