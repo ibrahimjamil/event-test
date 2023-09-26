@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -95,14 +97,37 @@ func handleCloudWatchEvent(event events.CloudWatchEvent) (interface{}, error) {
 	return string(event.Detail), nil
 }
 
-func handler(request interface{}) (interface{}, error) {
-	if apiGatewayEvent, ok := request.(events.APIGatewayProxyRequest); ok {
-		return handleAPIGatewayEvent(apiGatewayEvent)
-	}
-
-	if cloudWatchEvent, ok := request.(events.CloudWatchEvent); ok {
-		return handleCloudWatchEvent(cloudWatchEvent)
-	}
-
-	return nil, fmt.Errorf("unsupported event type: %T", request)
+// Record each data record
+type Record struct {
+	EventSource            string
+	EventSourceArn         string
+	AWSRegion              string
+	APIGatewayProxyRequest events.APIGatewayProxyRequest
+	CloudWatchEvent        events.CloudWatchEvent
 }
+
+// Event incoming event
+type Event struct {
+	Records []Record
+}
+
+func handler(ctx context.Context, event Event) {
+	gat := &events.APIGatewayProxyRequest{}
+	data, _ := json.Marshal(event.Records[0].APIGatewayProxyRequest)
+	json.Unmarshal(data, gat)
+	fmt.Printf(gat.Body)
+
+}
+
+// func handler(request interface{}) (interface{}, error) {
+// 	if apiGatewayEvent, ok := request.(events.APIGatewayProxyRequest); ok {
+// 		fmt.Printf(request)
+// 		return handleAPIGatewayEvent(apiGatewayEvent)
+// 	}
+
+// 	if cloudWatchEvent, ok := request.(events.CloudWatchEvent); ok {
+// 		return handleCloudWatchEvent(cloudWatchEvent)
+// 	}
+
+// 	return nil, fmt.Errorf("unsupported event type: %T", request)
+// }
