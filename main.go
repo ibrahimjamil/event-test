@@ -102,6 +102,7 @@ func handler(request interface{}) (interface{}, error) {
 		gatewayRequest := &events.APIGatewayProxyRequest{}
 		if err := json.Unmarshal(gatewayRequestData, gatewayRequest); err == nil {
 			if len(gatewayRequest.Body) > 0 {
+				fmt.Println(gatewayRequest)
 				return handleAPIGatewayEvent(gatewayRequest)
 			}
 		}
