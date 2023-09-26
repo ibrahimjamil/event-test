@@ -144,6 +144,7 @@ func (h Handler) Invoke(ctx context.Context, data []byte) ([]byte, error) {
 	// }
 
 	//for demonstration purposes, not the best way to handle
+	fmt.Printf("hello")
 	apiGatewayEvent := new(events.APIGatewayProxyRequest)
 	if err := json.Unmarshal(data, apiGatewayEvent); err != nil {
 		log.Println("Not a api gateway event")
