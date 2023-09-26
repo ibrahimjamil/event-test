@@ -95,14 +95,26 @@ func handleCloudWatchEvent(event events.CloudWatchEvent) (interface{}, error) {
 	return string(event.Detail), nil
 }
 
-func handler(request interface{}) (interface{}, error) {
-	if apiGatewayEvent, ok := request.(events.APIGatewayProxyRequest); ok {
-		return handleAPIGatewayEvent(apiGatewayEvent)
-	}
+type Record struct {
+	EventVersion           string                        `json:"EventVersion"`
+	EventSubscriptionArn   string                        `json:"EventSubscriptionArn"`
+	EventSource            string                        `json:"EventSource"`
+	ApiGatewayProxyRequest events.APIGatewayProxyRequest `json:"ApiGatewayProxyRequest"`
+}
 
-	if cloudWatchEvent, ok := request.(events.CloudWatchEvent); ok {
-		return handleCloudWatchEvent(cloudWatchEvent)
-	}
+type Event struct {
+	Records []Record `json:"Records"`
+}
 
-	return nil, fmt.Errorf("unsupported event type: %T", request)
+func handler(event Event) (interface{}, error) {
+	fmt.Printf(event.Records[0].EventSource)
+	// if apiGatewayEvent, ok := request.(events.APIGatewayProxyRequest); ok {
+	// 	return handleAPIGatewayEvent(apiGatewayEvent)
+	// }
+
+	// if cloudWatchEvent, ok := request.(events.CloudWatchEvent); ok {
+	// 	return handleCloudWatchEvent(cloudWatchEvent)
+	// }
+
+	return nil, fmt.Errorf("unsupported event type: %T", "ss")
 }
