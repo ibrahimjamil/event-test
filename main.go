@@ -112,6 +112,7 @@ type Event struct {
 }
 
 func handler(ctx context.Context, event Event) {
+	fmt.Println(event)
 	gat := &events.APIGatewayProxyRequest{}
 	data, _ := json.Marshal(event)
 	fmt.Printf(string(data))
