@@ -105,6 +105,6 @@ func handler(request interface{}) (interface{}, error) {
 		// This block handles CloudWatch Events
 		return handleCloudWatchEvent(event)
 	default:
-		return nil, fmt.Errorf("unsupported event type")
+		return nil, fmt.Errorf("unsupported event type: %T", event)
 	}
 }
