@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -95,19 +96,18 @@ func handleCloudWatchEvent(event events.CloudWatchEvent) (interface{}, error) {
 	return string(event.Detail), nil
 }
 
-type Record struct {
-	EventVersion           string                        `json:"EventVersion"`
-	EventSubscriptionArn   string                        `json:"EventSubscriptionArn"`
-	EventSource            string                        `json:"EventSource"`
-	ApiGatewayProxyRequest events.APIGatewayProxyRequest `json:"ApiGatewayProxyRequest"`
+type Event struct {
+	events.APIGatewayProxyRequest
+	//other event type
 }
 
-type Event struct {
-	Records []Record `json:"Records"`
+type Response struct {
+	events.APIGatewayProxyResponse `json:",omitempty"`
+	//other response type
 }
 
 func handler(event Event) (interface{}, error) {
-	fmt.Printf(event.Records[0].EventSource)
+	// fmt.Printf(event.Records[0].EventSource)
 	// if apiGatewayEvent, ok := request.(events.APIGatewayProxyRequest); ok {
 	// 	return handleAPIGatewayEvent(apiGatewayEvent)
 	// }
@@ -115,6 +115,13 @@ func handler(event Event) (interface{}, error) {
 	// if cloudWatchEvent, ok := request.(events.CloudWatchEvent); ok {
 	// 	return handleCloudWatchEvent(cloudWatchEvent)
 	// }
+
+	var response Response
+	switch {
+	case reflect.DeepEqual(event.APIGatewayProxyRequest, events.APIGatewayProxyRequest{}):
+		response.APIGatewayProxyResponse, _ = handleAPIGatewayEvent(event.APIGatewayProxyRequest)
+		//another case for a event handler
+	}
 
 	return nil, fmt.Errorf("unsupported event type: %T", "ss")
 }
