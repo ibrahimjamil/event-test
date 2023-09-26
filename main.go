@@ -96,15 +96,13 @@ func handleCloudWatchEvent(event events.CloudWatchEvent) (interface{}, error) {
 }
 
 func handler(request interface{}) (interface{}, error) {
-	switch event := request.(type) {
-	case events.APIGatewayProxyRequest:
-		fmt.Printf("Received event: %+v\n", event)
-		// This block handles API Gateway events
-		return handleAPIGatewayEvent(event)
-	case events.CloudWatchEvent:
-		// This block handles CloudWatch Events
-		return handleCloudWatchEvent(event)
-	default:
-		return nil, fmt.Errorf("unsupported event type: %T", event)
+	if apiGatewayEvent, ok := request.(events.APIGatewayProxyRequest); ok {
+		return handleAPIGatewayEvent(apiGatewayEvent)
 	}
+
+	if cloudWatchEvent, ok := request.(events.CloudWatchEvent); ok {
+		return handleCloudWatchEvent(cloudWatchEvent)
+	}
+
+	return nil, fmt.Errorf("unsupported event type: %T", request)
 }
