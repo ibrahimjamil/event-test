@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      TF_WORKSPACE: default  # Set your Terraform workspace name here
+      TF_WORKSPACE: dev  # Set your Terraform workspace name here
 
     steps:
       - name: Checkout code
