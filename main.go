@@ -107,6 +107,7 @@ type Response struct {
 }
 
 func handler(event Event) (interface{}, error) {
+	fmt.Printf(event.Body)
 	// fmt.Printf(event.Records[0].EventSource)
 	// if apiGatewayEvent, ok := request.(events.APIGatewayProxyRequest); ok {
 	// 	return handleAPIGatewayEvent(apiGatewayEvent)
