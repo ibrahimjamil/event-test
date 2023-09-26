@@ -17,7 +17,7 @@ func main() {
 	lambda.Start(handler)
 }
 
-func handleAPIGatewayEvent(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func handleAPIGatewayEvent(request *events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	// Get the broker endpoint
 	brokerEndpointIP := os.Getenv("MQ_ENDPOINT_IP")
 	brokerUsername := os.Getenv("BROKER_USERNAME")
@@ -89,65 +89,33 @@ func handleAPIGatewayEvent(request events.APIGatewayProxyRequest) (events.APIGat
 	return response, nil
 }
 
-func handleCloudWatchEvent(event events.CloudWatchEvent) (interface{}, error) {
+func handleCloudWatchEvent(event *events.CloudWatchEvent) (interface{}, error) {
 	// Handle CloudWatch Event (event logs) here
 	// Access event.Detail and other properties as needed
 	fmt.Printf(string(event.Detail))
 	return string(event.Detail), nil
 }
 
-// Record each data record
-type Record struct {
-	EventSource            string
-	EventSourceArn         string
-	AWSRegion              string
-	APIGatewayProxyRequest events.APIGatewayProxyRequest
-	CloudWatchEvent        events.CloudWatchEvent
-}
+func handler(request interface{}) (interface{}, error) {
+	// Try to unmarshal the request into an APIGatewayProxyRequest
+	if gatewayRequestData, err := json.Marshal(request); err == nil {
+		gatewayRequest := &events.APIGatewayProxyRequest{}
+		if err := json.Unmarshal(gatewayRequestData, gatewayRequest); err == nil {
+			if len(gatewayRequest.Body) > 0 {
+				return handleAPIGatewayEvent(gatewayRequest)
+			}
+		}
+	}
 
-// Event incoming event
-type Event struct {
-	Records []Record
-}
-
-func handler(request interface{}) (events.APIGatewayProxyResponse, error) {
-	gt := &events.APIGatewayProxyRequest{}
-	data, _ := json.Marshal(request)
-	json.Unmarshal(data, gt)
-	fmt.Println("gtt-----", gt)
-
-	cwe := &events.CloudWatchEvent{}
-	data2, _ := json.Marshal(request)
-	json.Unmarshal(data2, cwe)
-	fmt.Println("cwe-----", cwe)
-	// fmt.Println(request.Body)
-	// gat := &events.APIGatewayProxyRequest{}
-	// data, _ := json.Marshal(event)
-	// fmt.Printf(string(data))
-	// json.Unmarshal(data, gat)
-	// fmt.Printf(gat.Body)
-	// events.CloudWatchEvent
-	// if apiGatewayEvent, ok := request.(events.APIGatewayProxyRequest); ok {
-	// 	return handleAPIGatewayEvent(apiGatewayEvent)
-	// }
-
-	// if cloudWatchEvent, ok := request.(events.CloudWatchEvent); ok {
-	// 	return handleCloudWatchEvent(cloudWatchEvent)
-	// }
-
+	// Try to unmarshal the request into a CloudWatchEvent
+	if cloudWatchEventData, err := json.Marshal(request); err == nil {
+		cloudWatchEvent := &events.CloudWatchEvent{}
+		if err := json.Unmarshal(cloudWatchEventData, cloudWatchEvent); err == nil {
+			if len(cloudWatchEvent.Detail) > 0 {
+				fmt.Println("Received CloudWatch event with non-empty detail")
+				return handleCloudWatchEvent(cloudWatchEvent)
+			}
+		}
+	}
 	return events.APIGatewayProxyResponse{}, nil
-
 }
-
-// func handler(request interface{}) (interface{}, error) {
-// 	if apiGatewayEvent, ok := request.(events.APIGatewayProxyRequest); ok {
-// 		fmt.Printf(request)
-// 		return handleAPIGatewayEvent(apiGatewayEvent)
-// 	}
-
-// 	if cloudWatchEvent, ok := request.(events.CloudWatchEvent); ok {
-// 		return handleCloudWatchEvent(cloudWatchEvent)
-// 	}
-
-// 	return nil, fmt.Errorf("unsupported event type: %T", request)
-// }
