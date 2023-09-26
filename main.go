@@ -101,7 +101,10 @@ func handler(request interface{}) (interface{}, error) {
 	if gatewayRequestData, err := json.Marshal(request); err == nil {
 		gatewayRequest := &events.APIGatewayProxyRequest{}
 		if err := json.Unmarshal(gatewayRequestData, gatewayRequest); err == nil {
-			if len(gatewayRequest.Body) > 0 {
+			if gatewayRequest.HTTPMethod == "POST" ||
+				gatewayRequest.HTTPMethod == "PUT" ||
+				gatewayRequest.HTTPMethod == "DELETE" ||
+				gatewayRequest.HTTPMethod == "GET" {
 				fmt.Println(gatewayRequest)
 				return handleAPIGatewayEvent(gatewayRequest)
 			}
