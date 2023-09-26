@@ -1,0 +1,85 @@
+name: Deploy to AWS S3
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      TF_WORKSPACE: default  # Set your Terraform workspace name here
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build Golang code
+        working-directory: ${{ github.workspace }}  # Set the working directory to your Golang code directory
+        run: |
+          export GOOS=linux
+          export GOARCH=amd64
+          export CGO_ENABLED=0
+          go build -o bootstrap main.go
+
+      - name: Zip Golang build files
+        working-directory: ${{ github.workspace }}
+        run: |
+          zip -r event-webhook-v1.zip .
+
+      - name: Upload to AWS S3
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-1                 # Same with the lambda function region
+
+      - name: Upload to AWS S3
+        working-directory: ${{ github.workspace }}
+        run: |
+          bucket_name="event-webhook"
+          object_name="event-webhook-v1.zip"
+          
+          # Check if the S3 bucket exists
+          if ! aws s3api head-bucket --bucket "$bucket_name" 2>/dev/null; then
+          echo "S3 bucket '$bucket_name' does not exist, creating..."
+          aws s3api create-bucket \
+            --bucket "$bucket_name" \
+            --region us-west-1 \
+            --create-bucket-configuration \
+            LocationConstraint=us-west-1
+          fi
+          
+          # Upload the object to the S3 bucket
+          aws s3 cp "$object_name" "s3://$bucket_name/$object_name"
+
+        # Lambda function exists check required as some times terraform resources may
+        # be down at all so in that case we don't want to update that function
+        # or run next job named Update Lambda Function. We still somehow want to upload
+        # zip to s3 as its independent of terraform resources which we did before.
+      - name: Check if Lambda function exists
+        id: lambda_check
+        run: |
+          workspace_name="${{ env.TF_WORKSPACE }}"
+          lambda_function_name="event_lambda_function-${workspace_name}"
+          if aws lambda get-function --function-name "$lambda_function_name" >/dev/null 2>&1; then
+            echo "::set-output name=function_exists::true"
+          else
+            echo "::set-output name=function_exists::false"
+          fi
+
+      - name: Update Lambda Function
+        if: steps.lambda_check.outputs.function_exists == 'true'
+        run: |
+          workspace_name="${{ env.TF_WORKSPACE }}"
+          lambda_function_name="event_lambda_function-${workspace_name}"
+          bucket_name="event-webhook"
+          object_name="event-webhook-v1.zip"
+
+          # Update the Lambda function code with the latest version from S3
+          aws lambda update-function-code \
+            --function-name "$lambda_function_name" \
+            --s3-bucket "$bucket_name" \
+            --s3-key "$object_name"
