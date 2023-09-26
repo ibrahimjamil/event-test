@@ -1,9 +1,7 @@
 package main
 
 import (
-	"context"
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -15,7 +13,7 @@ import (
 )
 
 func main() {
-	lambda.Start(Handler{})
+	lambda.Start(handler)
 }
 
 func handleAPIGatewayEvent(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -97,61 +95,14 @@ func handleCloudWatchEvent(event events.CloudWatchEvent) (interface{}, error) {
 	return string(event.Detail), nil
 }
 
-type Record struct {
-	EventVersion                   string `json:"EventVersion"`
-	EventSubscriptionArn           string `json:"EventSubscriptionArn"`
-	EventSource                    string `json:"EventSource"`
-	events.APIGatewayProxyResponse `json:",omitempty"`
-}
-
-type Event struct {
-	Records Record `json:"Records"`
-}
-
-type Response struct {
-	events.APIGatewayProxyResponse `json:",omitempty"`
-	//other response type
-}
-
-type CustomEvent struct {
-	//Give EventSource "aws:manual" value to determine event is manual
-	EventSource string `json:"eventSource"`
-
-	//Other CustomEvent Attributes
-}
-
-type Handler struct {
-	//add global variables or context information that your handler may need
-}
-
-func (h Handler) Invoke(ctx context.Context, data []byte) ([]byte, error) {
-	// fmt.Printf("event-source", event.Records.EventSource)
-	// fmt.Printf(event.Records[0].EventSource)
-	// if apiGatewayEvent, ok := request.(events.APIGatewayProxyRequest); ok {
-	// 	return handleAPIGatewayEvent(apiGatewayEvent)
-	// }
-
-	// if cloudWatchEvent, ok := request.(events.CloudWatchEvent); ok {
-	// 	return handleCloudWatchEvent(cloudWatchEvent)
-	// }
-
-	// var response Response
-	// switch {
-	// case reflect.DeepEqual(event.APIGatewayProxyRequest, events.APIGatewayProxyRequest{}):
-	// 	response.APIGatewayProxyResponse, _ = handleAPIGatewayEvent(event.APIGatewayProxyRequest)
-	// 	//another case for a event handler
-	// 	fmt.Printf("hello")
-	// }
-
-	//for demonstration purposes, not the best way to handle
-	fmt.Printf("hello")
-	apiGatewayEvent := new(events.APIGatewayProxyRequest)
-	if err := json.Unmarshal(data, apiGatewayEvent); err != nil {
-		log.Println("Not a api gateway event")
+func handler(request interface{}) (interface{}, error) {
+	if apiGatewayEvent, ok := request.(events.APIGatewayProxyRequest); ok {
+		return handleAPIGatewayEvent(apiGatewayEvent)
 	}
-	snsEvent := new(events.SNSEvent)
-	if err := json.Unmarshal(data, snsEvent); err != nil {
-		log.Println("Not a sns event")
+
+	if cloudWatchEvent, ok := request.(events.CloudWatchEvent); ok {
+		return handleCloudWatchEvent(cloudWatchEvent)
 	}
-	return nil, nil
+
+	return nil, fmt.Errorf("unsupported event type: %T", request)
 }
