@@ -113,7 +113,8 @@ type Event struct {
 
 func handler(ctx context.Context, event Event) {
 	gat := &events.APIGatewayProxyRequest{}
-	data, _ := json.Marshal(event.Records[0].APIGatewayProxyRequest)
+	data, _ := json.Marshal(event)
+	fmt.Printf(string(data))
 	json.Unmarshal(data, gat)
 	fmt.Printf(gat.Body)
 
