@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -111,7 +110,7 @@ type Event struct {
 	Records []Record
 }
 
-func handler(ctx context.Context, event Event) {
+func handler(event Event) {
 	fmt.Println(event)
 	gat := &events.APIGatewayProxyRequest{}
 	data, _ := json.Marshal(event)
