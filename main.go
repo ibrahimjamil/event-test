@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -13,7 +15,7 @@ import (
 )
 
 func main() {
-	lambda.Start(handler)
+	lambda.Start(Handler{})
 }
 
 func handleAPIGatewayEvent(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -111,8 +113,19 @@ type Response struct {
 	//other response type
 }
 
-func handler(event Event) (interface{}, error) {
-	fmt.Printf("event-source", event.Records.EventSource)
+type CustomEvent struct {
+	//Give EventSource "aws:manual" value to determine event is manual
+	EventSource string `json:"eventSource"`
+
+	//Other CustomEvent Attributes
+}
+
+type Handler struct {
+	//add global variables or context information that your handler may need
+}
+
+func (h Handler) Invoke(ctx context.Context, data []byte) ([]byte, error) {
+	// fmt.Printf("event-source", event.Records.EventSource)
 	// fmt.Printf(event.Records[0].EventSource)
 	// if apiGatewayEvent, ok := request.(events.APIGatewayProxyRequest); ok {
 	// 	return handleAPIGatewayEvent(apiGatewayEvent)
@@ -130,5 +143,14 @@ func handler(event Event) (interface{}, error) {
 	// 	fmt.Printf("hello")
 	// }
 
-	return nil, fmt.Errorf("unsupported event type: %T", "ss")
+	//for demonstration purposes, not the best way to handle
+	apiGatewayEvent := new(events.APIGatewayProxyRequest)
+	if err := json.Unmarshal(data, apiGatewayEvent); err != nil {
+		log.Println("Not a api gateway event")
+	}
+	snsEvent := new(events.SNSEvent)
+	if err := json.Unmarshal(data, snsEvent); err != nil {
+		log.Println("Not a sns event")
+	}
+	return nil, nil
 }
