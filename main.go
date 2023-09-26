@@ -14,6 +14,6 @@ func main() {
 func handler(event events.CloudWatchEvent) (string, error) {
 	// Handle CloudWatch Event (event logs) here
 	// Access event.Detail and other properties as needed
-	fmt.Printf(string(event.ID))
+	fmt.Printf("event", string(event.ID))
 	return string(event.ID), nil
 }
