@@ -110,12 +110,9 @@ type Event struct {
 	Records []Record
 }
 
-func handler(request interface{}) (events.APIGatewayProxyResponse, error) {
+func handler(request []byte) (events.APIGatewayProxyResponse, error) {
 	gt := &events.APIGatewayProxyRequest{}
-	fmt.Println(request)
-	data, _ := json.Marshal(request)
-	fmt.Println(data)
-	json.Unmarshal(data, gt)
+	json.Unmarshal(request, gt)
 	fmt.Println(gt)
 	// fmt.Println(request.Body)
 	// gat := &events.APIGatewayProxyRequest{}
@@ -123,10 +120,10 @@ func handler(request interface{}) (events.APIGatewayProxyResponse, error) {
 	// fmt.Printf(string(data))
 	// json.Unmarshal(data, gat)
 	// fmt.Printf(gat.Body)
-
-	if apiGatewayEvent, ok := request.(events.APIGatewayProxyRequest); ok {
-		return handleAPIGatewayEvent(apiGatewayEvent)
-	}
+	// events.CloudWatchEvent
+	// if apiGatewayEvent, ok := request.(events.APIGatewayProxyRequest); ok {
+	// 	return handleAPIGatewayEvent(apiGatewayEvent)
+	// }
 
 	// if cloudWatchEvent, ok := request.(events.CloudWatchEvent); ok {
 	// 	return handleCloudWatchEvent(cloudWatchEvent)
