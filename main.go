@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -110,13 +109,13 @@ type Event struct {
 	Records []Record
 }
 
-func handler(event Event) {
-	fmt.Println(event)
-	gat := &events.APIGatewayProxyRequest{}
-	data, _ := json.Marshal(event)
-	fmt.Printf(string(data))
-	json.Unmarshal(data, gat)
-	fmt.Printf(gat.Body)
+func handler(request events.APIGatewayProxyRequest) {
+	fmt.Println(request)
+	// gat := &events.APIGatewayProxyRequest{}
+	// data, _ := json.Marshal(event)
+	// fmt.Printf(string(data))
+	// json.Unmarshal(data, gat)
+	// fmt.Printf(gat.Body)
 
 }
 
