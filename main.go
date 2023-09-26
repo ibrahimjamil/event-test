@@ -121,6 +121,7 @@ func handler(event Event) (interface{}, error) {
 	case reflect.DeepEqual(event.APIGatewayProxyRequest, events.APIGatewayProxyRequest{}):
 		response.APIGatewayProxyResponse, _ = handleAPIGatewayEvent(event.APIGatewayProxyRequest)
 		//another case for a event handler
+		fmt.Printf("hello")
 	}
 
 	return nil, fmt.Errorf("unsupported event type: %T", "ss")
