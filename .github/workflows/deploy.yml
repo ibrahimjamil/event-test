@@ -63,7 +63,7 @@ jobs:
         id: lambda_check
         run: |
           workspace_name="${{ env.TF_WORKSPACE }}"
-          lambda_function_name="event_lambda_function-${workspace_name}"
+          lambda_function_name="event_enode_function-${workspace_name}"
           if aws lambda get-function --function-name "$lambda_function_name" >/dev/null 2>&1; then
             echo "::set-output name=function_exists::true"
           else
@@ -74,7 +74,7 @@ jobs:
         if: steps.lambda_check.outputs.function_exists == 'true'
         run: |
           workspace_name="${{ env.TF_WORKSPACE }}"
-          lambda_function_name="event_lambda_function-${workspace_name}"
+          lambda_function_name="event_enode_function-${workspace_name}"
           bucket_name="event-webhook"
           object_name="event-webhook-v1.zip"
 
