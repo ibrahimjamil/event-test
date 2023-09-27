@@ -20,5 +20,7 @@ func handler(event map[string]interface{}) (string, error) {
 	// Use the eventName in your logic
 	result := fmt.Sprintf("Received custom event: Name=%s", eventName)
 
+	fmt.Printf("Received custom event: Name=%s", eventName)
+
 	return result, nil
 }
