@@ -12,7 +12,7 @@ func main() {
 
 func handler(event map[string]interface{}) (string, error) {
 	// Access the "EventName" field from the map
-	eventName, ok := event["EventName"].(string)
+	eventName, ok := event["jobName"].(string)
 	if !ok {
 		return "", fmt.Errorf("Failed to extract EventName from event")
 	}

@@ -1,19 +1,23 @@
-service: event-serverless-rule-scheduling
+service: solo-job-scheduler
+
 provider:
   name: aws
   region: us-west-1
 
-# Reference the existing CloudWatch Events rule created by Terraform
-resources:
-  Resources:
-    EventLambdaTrigger:
-      Type: AWS::Events::Rule
-      Properties:
-        Name: event_lambda_trigger  # Should match the name of the existing rule
-        ScheduleExpression: "cron(*/10 * * * ? *)"  # Update the schedule as needed
-        State: ENABLED
-        Targets:
-        - Id: event_lambda_trigger
-          Arn: >-
-            arn:aws:lambda:us-west-1:912165650675:function:event_lambda_function-dev
-          Input: '{"EventName":"my-custom-event"}'
+package:
+  exclude:
+    - ./**
+  include:
+    - ./bin/**
+
+functions:
+  event_lambda_function-dev:
+    handler: bootstrap
+    events:
+      - schedule:
+          name: heartbeat
+          description: health check
+          rate: "cron(*/30 * * * ? *)"
+          enabled: true
+          input:
+            jobName: heartbeat
