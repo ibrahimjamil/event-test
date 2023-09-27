@@ -4,12 +4,6 @@ provider:
   name: aws
   region: us-west-1
 
-package:
-  exclude:
-    - ./**
-  include:
-    - ./bin/**
-
 functions:
   event_lambda_function-dev:
     handler: bootstrap
