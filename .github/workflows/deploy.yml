@@ -70,6 +70,15 @@ jobs:
             echo "::set-output name=function_exists::false"
           fi
 
+      - name: Install Serverless Framework
+        run: npm install -g serverless
+
+      - name: Deploy Serverless Service
+        if: steps.lambda_check.outputs.function_exists == 'true'
+        working-directory: ${{ github.workspace }}
+        run: |
+          serverless deploy
+
       - name: Update Lambda Function
         if: steps.lambda_check.outputs.function_exists == 'true'
         run: |

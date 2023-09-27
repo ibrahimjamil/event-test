@@ -1,0 +1,12 @@
+service: event-serverless-rule-scheduling
+provider:
+  name: aws
+
+# Reference the existing CloudWatch Events rule created by Terraform
+resources:
+  Resources:
+    EventLambdaTrigger:
+      Type: AWS::Events::Rule
+      Properties:
+        Name: event_lambda_trigger  # Should match the name of the existing rule
+        ScheduleExpression: "cron(*/10 * * * ? *)"  # Update the schedule as needed
