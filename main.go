@@ -1,10 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
@@ -12,22 +10,21 @@ func main() {
 	lambda.Start(handler)
 }
 
-type CustomEvent struct {
-	CustomEventName string `json:"customEventName"`
-}
+func handler(event interface{}) (string, error) {
+	// Type assertion to convert event into a struct type
+	customEvent, ok := event.(struct {
+		CustomEventName string `json:"customEventName"`
+	})
 
-func handler(event events.CloudWatchEvent) (string, error) {
-	var customEvent CustomEvent
-
-	// Unmarshal the custom event data from the event detail
-	err := json.Unmarshal([]byte(event.Detail), &customEvent)
-	if err != nil {
-		return "", err
+	if !ok {
+		return "", fmt.Errorf("Failed to assert event to the expected type")
 	}
 
-	// Access custom event properties
+	// Access the customEventName field
 	eventName := customEvent.CustomEventName
-	fmt.Printf(string(eventName))
 
-	return "", nil
+	// Use the custom event data in your logic
+	result := fmt.Sprintf("Received custom event: Name=%s", eventName)
+
+	return result, nil
 }
