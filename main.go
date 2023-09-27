@@ -11,9 +11,9 @@ func main() {
 	lambda.Start(handler)
 }
 
-func handler(event events.CloudWatchEvent, name any) (string, error) {
+func handler(event events.CloudWatchEvent) (string, error) {
 	// Handle CloudWatch Event (event logs) here
 	// Access event.Detail and other properties as needed
-	fmt.Printf(string(event.Source), name)
+	fmt.Printf(string(event.Source))
 	return fmt.Sprint("event", string(event.Source)), nil
 }
