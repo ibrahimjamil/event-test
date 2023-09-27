@@ -12,3 +12,6 @@ resources:
         Name: event_lambda_trigger  # Should match the name of the existing rule
         ScheduleExpression: "cron(*/10 * * * ? *)"  # Update the schedule as needed
         State: ENABLED
+        EventPattern:  # Optionally, you can specify an event pattern here
+          source:
+            - aws.ec2
