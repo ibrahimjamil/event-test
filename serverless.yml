@@ -17,13 +17,3 @@ resources:
           Arn: >-
             arn:aws:lambda:us-west-1:912165650675:function:event_lambda_function-dev
           Input: '{"EventName":"my-custom-event"}'
-
-functions:
-  event_lambda_function-dev:  # Reference your existing Lambda function here
-    handler: bootstrap
-    events:
-      - eventBridge:
-          eventBus: default
-          pattern:
-            source:
-              - aws.ec2
