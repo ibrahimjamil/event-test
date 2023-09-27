@@ -1,4 +1,4 @@
-service: solo-job-scheduler
+service: 
 
 provider:
   name: aws
