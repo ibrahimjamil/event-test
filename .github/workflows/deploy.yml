@@ -37,7 +37,7 @@ jobs:
       - name: Deploy Serverless Service
         working-directory: ${{ github.workspace }}
         run: |
-          sls deploy
+          sls remove
 
       # - name: Update CloudWatch Events Rule
       #   run: |
