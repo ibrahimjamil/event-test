@@ -1,17 +1,18 @@
-service: 
+service: event
 
 provider:
   name: aws
   region: us-west-1
+  runtime: provided.al2
 
 functions:
-  event_lambda_function-dev:
+  lambda_function-dev:
     handler: bootstrap
     events:
       - schedule:
           name: heartbeat
           description: health check
-          rate: "cron(*/30 * * * ? *)"
+          rate: "cron(*/1 * * * ? *)"
           enabled: true
           input:
             jobName: heartbeat
