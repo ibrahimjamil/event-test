@@ -29,7 +29,7 @@ func handler(event events.CloudWatchEvent) (string, error) {
 	eventName := customEvent.CustomEventName
 
 	// Perform logic based on the custom event data
-	result := fmt.Sprintf("Received custom event: Name=%s, Data=%s", eventName)
+	result := fmt.Sprintf("Received custom event: Name=%s", eventName)
 	fmt.Printf(result)
 
 	return result, nil
