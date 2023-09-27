@@ -84,14 +84,14 @@ jobs:
             --s3-bucket "$bucket_name" \
             --s3-key "$object_name"
 
-      # - name: Install Serverless Framework
-      #   run: npm install -g serverless
+      - name: Install Serverless Framework
+        run: npm install -g serverless
 
-      # - name: Deploy Serverless Service
-      #   if: steps.lambda_check.outputs.function_exists == 'true'
-      #   working-directory: ${{ github.workspace }}
-      #   run: |
-      #     serverless deploy
+      - name: Deploy Serverless Service
+        if: steps.lambda_check.outputs.function_exists == 'true'
+        working-directory: ${{ github.workspace }}
+        run: |
+          sls deploy
 
       - name: Update CloudWatch Events Rule
         run: |
