@@ -1,6 +1,7 @@
 service: event-serverless-rule-scheduling
 provider:
   name: aws
+  region: us-west-1
 
 # Reference the existing CloudWatch Events rule created by Terraform
 resources:
