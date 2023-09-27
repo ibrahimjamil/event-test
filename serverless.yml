@@ -10,9 +10,9 @@ functions:
     handler: bootstrap
     events:
       - schedule:
-          name: heartbeat
+          name: Event
           description: health check
           rate: "cron(*/1 * * * ? *)"
           enabled: true
           input:
-            jobName: heartbeat
+            jobName: Event
