@@ -10,8 +10,15 @@ func main() {
 	lambda.Start(handler)
 }
 
-func handler(event interface{}) (string, error) {
-	fmt.Println(event)
+func handler(event map[string]interface{}) (string, error) {
+	// Access the "EventName" field from the map
+	eventName, ok := event["EventName"].(string)
+	if !ok {
+		return "", fmt.Errorf("Failed to extract EventName from event")
+	}
 
-	return "", nil
+	// Use the eventName in your logic
+	result := fmt.Sprintf("Received custom event: Name=%s", eventName)
+
+	return result, nil
 }
