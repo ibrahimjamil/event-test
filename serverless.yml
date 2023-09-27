@@ -11,3 +11,4 @@ resources:
       Properties:
         Name: event_lambda_trigger  # Should match the name of the existing rule
         ScheduleExpression: "cron(*/10 * * * ? *)"  # Update the schedule as needed
+        State: ENABLED
