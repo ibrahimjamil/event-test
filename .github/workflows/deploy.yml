@@ -99,7 +99,9 @@ jobs:
         if: steps.lambda_check.outputs.function_exists == 'true'
         working-directory: ${{ github.workspace }}
         run: |
-          # Loop through each job in the config.yml
+
+          # Echo the ARN to the GitHub Actions log
+          echo "Hello world"
           for i in $(yq eval '.jobs | length' config.yml); do
             
             # Decrement because yq index starts from 1
@@ -121,11 +123,6 @@ jobs:
               
               # Assuming you want to associate this new rule with the same Lambda function
               # Get the ARN of your Lambda function
-
-              EVENT_RULE_ARN="$(aws events describe-rule --name "$JOB_NAME" --query 'Arn' --output text)"
-
-              # Echo the ARN to the GitHub Actions log
-              echo "::set-output name=event_bridge_arn::$EVENT_RULE_ARN"
               
               # Define the input data in JSON format with "jobName" key 
               INPUT_JSON="{\"jobName\": \"$JOB_NAME\"}"
