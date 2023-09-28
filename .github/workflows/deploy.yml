@@ -131,7 +131,7 @@ jobs:
                 \"Arn\": \"$LAMBDA_ARN\",
                 \"InputTransformer\": {
                   \"InputTemplate\": \"$INPUT_JSON\",
-                }
+                },
               }]"
 
               # Create AWS Lambda permission for this new rule
