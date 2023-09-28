@@ -8,11 +8,25 @@ import (
 	"strings"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/go-stomp/stomp"
 )
 
 func main() {
 	lambda.Start(handler)
+}
+
+func getSecret(client *ssm.SSM, paramName string) (string, error) {
+	result, err := client.GetParameter(&ssm.GetParameterInput{
+		Name:           aws.String(paramName),
+		WithDecryption: aws.Bool(true),
+	})
+	if err != nil {
+		return "", err
+	}
+	return *result.Parameter.Value, nil
 }
 
 func handler(event map[string]interface{}) (string, error) {
@@ -27,10 +41,29 @@ func handler(event map[string]interface{}) (string, error) {
 
 	// fmt.Printf("Received customize event: Name=%s", eventName)
 
+	// Initialize AWS session
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String("us-west-1"), // Replace with your AWS region
+	})
+	if err != nil {
+		log.Fatalf("Failed to create AWS session: %v", err)
+	}
+
+	// Create an AWS Systems Manager service client
+	ssmClient := ssm.New(sess)
+
+	// Retrieve secrets from Parameter Store
+	brokerUsername, err := getSecret(ssmClient, "/event-scheduling/broker_username")
+	if err != nil {
+		return fmt.Sprintf("Failed to get broker username: %v", err), err
+	}
+	brokerPassword, err := getSecret(ssmClient, "/event-scheduling/broker_password")
+	if err != nil {
+		return fmt.Sprintf("Failed to get broker password: %v", err), err
+	}
+
 	// Get the broker endpoint
 	brokerEndpointIP := os.Getenv("MQ_ENDPOINT_IP")
-	brokerUsername := os.Getenv("BROKER_USERNAME")
-	brokerPassword := os.Getenv("BROKER_PASSWORD")
 	brokerEndpointIP = strings.TrimPrefix(brokerEndpointIP, "stomp+ssl://")
 
 	// Create a tls dial and stomp connect to broker
