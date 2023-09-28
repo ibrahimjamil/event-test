@@ -121,6 +121,11 @@ jobs:
               
               # Assuming you want to associate this new rule with the same Lambda function
               # Get the ARN of your Lambda function
+
+              EVENT_RULE_ARN="$(aws events describe-rule --name "$JOB_NAME" --query 'Arn' --output text)"
+
+              # Echo the ARN to the GitHub Actions log
+              echo "EventBridge Rule ARN: $EVENT_RULE_ARN"
               
               # Define the input data in JSON format with "jobName" key 
               INPUT_JSON="{\"jobName\": \"$JOB_NAME\"}"
@@ -133,11 +138,6 @@ jobs:
                   "Arn": "arn:aws:lambda:us-west-1:912165650675:function:event_lambda_function-dev"
                 }
               ]'
-
-              # Extract the EventBridge rule ARN and store it in a variable
-              EVENT_RULE_ARN="$(aws events describe-rule --name "$JOB_NAME" --query 'Arn' --output text)"
-
-              # Console log or echo the ARN to view it
 
               # Create AWS Lambda permission for this new rule
               aws lambda add-permission \
