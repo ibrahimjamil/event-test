@@ -20,11 +20,10 @@ func main() {
 
 func getSecret(client *ssm.SSM, paramName string) (string, error) {
 	result, err := client.GetParameter(&ssm.GetParameterInput{
-		Name:           aws.String(paramName),
-		WithDecryption: aws.Bool(true),
+		Name: aws.String(paramName),
 	})
 	if err != nil {
-		return "", err
+		return "error getting parms", err
 	}
 	return *result.Parameter.Value, nil
 }
