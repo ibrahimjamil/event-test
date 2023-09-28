@@ -51,6 +51,7 @@ func handler(event map[string]interface{}) (string, error) {
 
 	// Create an AWS Systems Manager service client
 	ssmClient := ssm.New(sess)
+	fmt.Printf("Failed to get broker password: %v", err)
 
 	// Retrieve secrets from Parameter Store
 	brokerUsername, err := getSecret(ssmClient, "/event-scheduling/broker_username")
