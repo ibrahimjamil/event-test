@@ -13,6 +13,8 @@ provider:
 functions:
   lambda_function-dev:
     handler: bootstrap
+    environment:
+      SECURITY_GROUP_ARN: arn:aws:ec2:us-west-1:912165650675:security-group/lambda-sg-dev
     events:
       - schedule:
           name: Event
