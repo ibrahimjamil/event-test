@@ -13,8 +13,12 @@ provider:
 functions:
   lambda_function-dev:
     handler: bootstrap
-    environment:
-      SECURITY_GROUP_ARN: arn:aws:ec2:us-west-1:912165650675:security-group/lambda-sg-dev
+    role: arn:aws:iam::912165650675:role/enode-lambda-dev
+    vpc:
+      securityGroupIds:
+        - sg-0017d6f9a56aefd87
+      subnetIds:
+        - subnet-07f570db2d7c985ab
     events:
       - schedule:
           name: Event
