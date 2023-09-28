@@ -122,11 +122,19 @@ jobs:
               # Assuming you want to associate this new rule with the same Lambda function
               # Get the ARN of your Lambda function
               
+              jsonDump() {
+                cat <<EOF
+              {
+                "jobName": "$JOB_NAME"
+              }
+              EOF
+              }
+
               # Define the input data in JSON format with "jobName" key
               INPUT_JSON="{\"jobName\": \"$JOB_NAME\"}"
 
               # Create or update the CloudWatch Event Rule target with input
-              aws events put-targets --rule "$JOB_NAME" --targets "Id"="1","Arn"="$LAMBDA_ARN", "input"="{"jobName": "$JOB_NAME"}"
+              aws events put-targets --rule "$JOB_NAME" --targets "Id"="1","Arn"="$LAMBDA_ARN","input"="$(jsonDump)"
 
               # Create AWS Lambda permission for this new rule
               aws lambda add-permission \
