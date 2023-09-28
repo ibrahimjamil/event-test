@@ -16,7 +16,7 @@ functions:
       - schedule:
           name: Event
           description: health check
-          rate: "cron(*/1 * * * ? *)"
+          rate: "cron(*/30 * * * ? *)"
           enabled: true
           input:
             jobName: Event
