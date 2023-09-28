@@ -17,6 +17,8 @@ functions:
         - subnet-07f570db2d7c985ab
     environment:
       MQ_ENDPOINT_IP: stomp+ssl://b-7d4aef2a-2c19-4131-90b0-18e9e14c7e12-1.mq.us-west-1.amazonaws.com:61614
+      BROKER_USERNAME: root
+      BROKER_PASSWORD: Admin@123456
     events:
       - schedule:
           name: Event
