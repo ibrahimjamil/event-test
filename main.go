@@ -55,10 +55,12 @@ func handler(event map[string]interface{}) (string, error) {
 	// Retrieve secrets from Parameter Store
 	brokerUsername, err := getSecret(ssmClient, "/event-scheduling/broker_username")
 	if err != nil {
+		fmt.Printf("Failed to get broker username: %v", err)
 		return fmt.Sprintf("Failed to get broker username: %v", err), err
 	}
 	brokerPassword, err := getSecret(ssmClient, "/event-scheduling/broker_password")
 	if err != nil {
+		fmt.Printf("Failed to get broker password: %v", err)
 		return fmt.Sprintf("Failed to get broker password: %v", err), err
 	}
 
