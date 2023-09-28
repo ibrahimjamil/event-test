@@ -125,7 +125,7 @@ jobs:
               EVENT_RULE_ARN="$(aws events describe-rule --name "$JOB_NAME" --query 'Arn' --output text)"
 
               # Echo the ARN to the GitHub Actions log
-              echo "EventBridge Rule ARN: $EVENT_RULE_ARN"
+              echo "::set-output name=event_bridge_arn::$EVENT_RULE_ARN"
               
               # Define the input data in JSON format with "jobName" key 
               INPUT_JSON="{\"jobName\": \"$JOB_NAME\"}"
