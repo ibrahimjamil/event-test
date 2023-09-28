@@ -99,9 +99,7 @@ jobs:
         if: steps.lambda_check.outputs.function_exists == 'true'
         working-directory: ${{ github.workspace }}
         run: |
-
-          # Echo the ARN to the GitHub Actions log
-          echo "Hello world"
+          # Loop through each job in the config.yml
           for i in $(yq eval '.jobs | length' config.yml); do
             
             # Decrement because yq index starts from 1
@@ -124,15 +122,15 @@ jobs:
               # Assuming you want to associate this new rule with the same Lambda function
               # Get the ARN of your Lambda function
               
-              # Define the input data in JSON format with "jobName" key 
+              # Define the input data in JSON format with "jobName" key
               INPUT_JSON="{\"jobName\": \"$JOB_NAME\"}"
-      
+
               # Create or update the CloudWatch Event Rule target with input
-              aws events put-targets --rule "$JOB_NAME" --targets '
-              [
+              aws events put-targets --rule "$JOB_NAME" --targets '[
                 {
                   "Id": "TargetLambdaFunction",
-                  "Arn": "arn:aws:lambda:us-west-1:912165650675:function:event_lambda_function-dev"
+                  "Arn": "arn:aws:lambda:us-west-1:912165650675:function:event_lambda_function-dev",
+                  "Input": "$INPUT_JSON"
                 }
               ]'
 
