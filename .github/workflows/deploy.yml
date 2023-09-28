@@ -134,6 +134,12 @@ jobs:
                 }
               ]'
 
+              # Extract the EventBridge rule ARN and store it in a variable
+              EVENT_RULE_ARN="$(aws events describe-rule --name "$JOB_NAME" --query 'Arn' --output text)"
+
+              # Console log or echo the ARN to view it
+              echo "EventBridge Rule ARN: $EVENT_RULE_ARN"
+
               # Create AWS Lambda permission for this new rule
               aws lambda add-permission \
                 --function-name "event_lambda_function-dev" \
