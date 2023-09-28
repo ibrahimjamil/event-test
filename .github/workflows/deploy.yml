@@ -138,6 +138,7 @@ jobs:
             else
               # If the rule already exists, just update its schedule
               aws events put-rule --name "$JOB_NAME" --schedule-expression "$JOB_SCHEDULE"
+              aws events put-targets --rule "$JOB_NAME" --targets "Id"="1","Arn"="$LAMBDA_ARN","Input"=`{\"jobName\":\"$JOB_NAME\"}`
             fi
             
           done
