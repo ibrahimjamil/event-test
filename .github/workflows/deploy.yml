@@ -117,7 +117,7 @@ jobs:
               LAMBDA_ARN=arn:aws:lambda:us-west-1:912165650675:function:event_lambda_function-dev
               
               # If the rule doesn't exist, create a new one
-              aws events put-rule --name "$JOB_NAME" --schedule-expression "$JOB_SCHEDULE" --event-pattern `{\"jobName\":\"$JOB_NAME\"}`
+              aws events put-rule --name "$JOB_NAME" --schedule-expression "$JOB_SCHEDULE"
               
               # Assuming you want to associate this new rule with the same Lambda function
               # Get the ARN of your Lambda function
