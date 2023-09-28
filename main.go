@@ -91,5 +91,5 @@ func handler(event map[string]interface{}) (string, error) {
 		break
 	}
 
-	return fmt.Sprintf("Received custom event: Name=%s", eventName), nil
+	return fmt.Sprintf("Received custom events: Name=%s", eventName), nil
 }
