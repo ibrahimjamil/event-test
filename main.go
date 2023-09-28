@@ -22,6 +22,9 @@ func getSecret(client *ssm.SSM, paramName string) (string, error) {
 	result, err := client.GetParameter(&ssm.GetParameterInput{
 		Name: aws.String(paramName),
 	})
+	if result.Parameter.Value == nil {
+		fmt.Printf("failed to get parameter")
+	}
 	if err != nil {
 		return "error getting parms", err
 	}
