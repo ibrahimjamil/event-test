@@ -15,6 +15,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      
+      - name: Get Credentionals
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-1                 # Same with the lambda function region
 
       - name: Build Golang code
         working-directory: ${{ github.workspace }}  # Set the working directory to your Golang code directory
@@ -23,25 +30,109 @@ jobs:
           export GOARCH=amd64
           export CGO_ENABLED=0
           go build -o bootstrap main.go
-          
-      - name: Get Credentionals
+
+      - name: Zip Golang build files
+        working-directory: ${{ github.workspace }}
+        run: |
+          zip -r event-webhook-v1.zip .
+
+      - name: Set Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-1                 # Same with the lambda function region
 
-      - name: Install Serverless Framework
-        run: npm install -g serverless
-
-      - name: Deploy Serverless Service
+      - name: Upload to AWS S3
         working-directory: ${{ github.workspace }}
         run: |
-          sls remove --verbose
+          bucket_name="event-webhook"
+          object_name="event-webhook-v1.zip"
+          
+          # Check if the S3 bucket exists
+          if ! aws s3api head-bucket --bucket "$bucket_name" 2>/dev/null; then
+          echo "S3 bucket '$bucket_name' does not exist, creating..."
+          aws s3api create-bucket \
+            --bucket "$bucket_name" \
+            --region us-west-1 \
+            --create-bucket-configuration \
+            LocationConstraint=us-west-1
+          fi
+          
+          # Upload the object to the S3 bucket
+          aws s3 cp "$object_name" "s3://$bucket_name/$object_name"
 
-      # - name: Update CloudWatch Events Rule
-      #   run: |
-      #     aws events put-rule --name event_lambda_trigger --schedule-expression "cron(*/5 * * * ? *)"
-      #   env:
-      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        # Lambda function exists check required as some times terraform resources may
+        # be down at all so in that case we don't want to update that function
+        # or run next job named Update Lambda Function. We still somehow want to upload
+        # zip to s3 as its independent of terraform resources which we did before.
+      - name: Check if Lambda function exists
+        id: lambda_check
+        run: |
+          workspace_name="${{ env.TF_WORKSPACE }}"
+          lambda_function_name="event_lambda_function-${workspace_name}"
+          if aws lambda get-function --function-name "$lambda_function_name" >/dev/null 2>&1; then
+            echo "::set-output name=function_exists::true"
+          else
+            echo "::set-output name=function_exists::false"
+          fi
+
+      - name: Update Lambda Function
+        if: steps.lambda_check.outputs.function_exists == 'true'
+        run: |
+          workspace_name="${{ env.TF_WORKSPACE }}"
+          lambda_function_name="event_lambda_function-${workspace_name}"
+          bucket_name="event-webhook"
+          object_name="event-webhook-v1.zip"
+
+          # Update the Lambda function code with the latest version from S3
+          aws lambda update-function-code \
+            --function-name "$lambda_function_name" \
+            --s3-bucket "$bucket_name" \
+            --s3-key "$object_name"
+
+      - name: Install yq
+        run: |
+          sudo snap install yq
+
+      - name: Update CloudWatch Event Rules
+        if: steps.lambda_check.outputs.function_exists == 'true'
+        working-directory: ${{ github.workspace }}
+        run: |
+          # Loop through each job in the config.yml
+          for i in $(yq eval '.jobs | length' config.yml); do
+            
+            # Decrement because yq index starts from 1
+            idx=$((i-1))
+            
+            # Fetch the job name and schedule
+            JOB_NAME=$(yq eval ".jobs[$idx].name" config.yml)
+            JOB_SCHEDULE=$(yq eval ".jobs[$idx].schedule" config.yml)
+            
+            # Check if the rule with the given name already exists
+            EXISTS=$(aws events describe-rule --name "$JOB_NAME" || echo "no")
+            
+            if [[ $EXISTS == "no" ]]; then
+              # If the rule doesn't exist, create a new one
+              aws events put-rule --name "$JOB_NAME" --schedule-expression "$JOB_SCHEDULE"
+              
+              # Assuming you want to associate this new rule with the same Lambda function
+              # Get the ARN of your Lambda function
+              
+              # Define the input data in JSON format with "jobName" key 
+              INPUT_JSON="{\"jobName\": \"$JOB_NAME\"}"
+      
+              # Create or update the CloudWatch Event Rule target with input
+              aws events put-targets --rule "$JOB_NAME" --targets "Id"="1", "Arn"="$LAMBDA_ARN" --input "{\"jobName\": \"$JOB_NAME\"}"
+              
+              LAMBDA_ARN=<Your_Lambda_Function_ARN>
+              aws events put-targets --rule "$JOB_NAME" --targets "Id"="1","Arn"="$LAMBDA_ARN"
+
+              # Create AWS Lambda permission for this new rule
+              aws lambda add-permission --function-name "$LAMBDA_ARN" --statement-id "$JOB_NAME-permission" --action lambda:InvokeFunction --principal events.amazonaws.com --source-arn "$(aws events describe-rule --name "$JOB_NAME" --query 'Arn' --output text)"
+            else
+              # If the rule already exists, just update its schedule
+              aws events put-rule --name "$JOB_NAME" --schedule-expression "$JOB_SCHEDULE"
+            fi
+            
+          done
