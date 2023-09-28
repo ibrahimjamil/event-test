@@ -130,7 +130,7 @@ jobs:
                 \"Id\": \"TargetLambdaFunction\",
                 \"Arn\": \"$LAMBDA_ARN\",
                 \"InputTransformer\": {
-                  \"InputTemplate\": \"$INPUT_JSON\"
+                  \"InputTemplate\": \"$INPUT_JSON\",
                 }
               }]"
 
