@@ -95,6 +95,16 @@ jobs:
         run: |
           sudo snap install yq
 
+      - name: Define JSON data
+        id: define-json
+        run: |
+          cat <<EOF > jsondata.json
+          {
+            "jobName": "Hello"
+          }
+          EOF
+          echo "::set-output name=JSON_DATA::$(cat jsondata.json)"
+
       - name: Update CloudWatch Event Rules
         if: steps.lambda_check.outputs.function_exists == 'true'
         working-directory: ${{ github.workspace }}
@@ -122,19 +132,11 @@ jobs:
               # Assuming you want to associate this new rule with the same Lambda function
               # Get the ARN of your Lambda function
               
-              jsonDump() {
-                cat <<EOF
-              {
-                "jobName": "$JOB_NAME"
-              }
-              EOF
-              }
-
               # Define the input data in JSON format with "jobName" key
               INPUT_JSON="{\"jobName\": \"$JOB_NAME\"}"
 
               # Create or update the CloudWatch Event Rule target with input
-              aws events put-targets --rule "$JOB_NAME" --targets "Id"="1","Arn"="$LAMBDA_ARN","input"="$(jsonDump)"
+              aws events put-targets --rule "$JOB_NAME" --targets "Id"="1","Arn"="$LAMBDA_ARN","input"="$JSON_DATA"
 
               # Create AWS Lambda permission for this new rule
               aws lambda add-permission \
