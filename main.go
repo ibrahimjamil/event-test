@@ -25,7 +25,7 @@ func handler(event map[string]interface{}) (string, error) {
 	// Use the eventName in your logic
 	// result := fmt.Sprintf("Received custom event: Name=%s", eventName)
 
-	fmt.Printf("Received customize event: Name=%s", eventName)
+	// fmt.Printf("Received customize event: Name=%s", eventName)
 
 	// Get the broker endpoint
 	brokerEndpointIP := os.Getenv("MQ_ENDPOINT_IP")
@@ -39,7 +39,7 @@ func handler(event map[string]interface{}) (string, error) {
 		log.Fatalln(err.Error())
 	}
 	defer netConn.Close()
-
+	fmt.Printf("Received customize event: Name=%s", eventName)
 	conn, err := stomp.Connect(netConn,
 		stomp.ConnOpt.Login(brokerUsername, brokerPassword))
 	if err != nil {

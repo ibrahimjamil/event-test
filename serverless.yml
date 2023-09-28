@@ -3,6 +3,7 @@ service: event
 provider:
   name: aws
   region: us-west-1
+  timeout: 30
   runtime: provided.al2
   environment:
     MQ_ENDPOINT_IP: stomp+ssl://b-7d4aef2a-2c19-4131-90b0-18e9e14c7e12-1.mq.us-west-1.amazonaws.com:61614
