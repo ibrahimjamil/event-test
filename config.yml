@@ -1,7 +1,7 @@
 jobs:
   - name: event_lambda_trigger_0
-    schedule: 'cron(*/1 * * * ? *)'
+    schedule: 'cron(*/30 * * * ? *)'
   - name: event_lambda_trigger_1
-    schedule: 'cron(*/2 * * * ? *)'
+    schedule: 'cron(*/40 * * * ? *)'
   - name: event_lambda_trigger_2
-    schedule: 'cron(*/3 * * * ? *)'
+    schedule: 'cron(*/60 * * * ? *)'
