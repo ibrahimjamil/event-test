@@ -109,7 +109,7 @@ jobs:
           while [ "$i" -lt "$LENGTH" ]; do
             
             # Decrement because yq index starts from 1
-            i=$((i-1))
+            i=$((i+1))
             
             # Fetch the job name and schedule
             JOB_NAME=$(yq eval ".jobs[$i].name" config.yml)
