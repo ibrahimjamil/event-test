@@ -139,7 +139,7 @@ jobs:
               # If the rule already exists, just update its schedules
               LAMBDA_ARN=arn:aws:lambda:us-west-1:912165650675:function:event_lambda_function-dev
               aws events put-rule --name "$JOB_NAME" --schedule-expression "$JOB_SCHEDULE"
-              # aws events put-targets --rule "$JOB_NAME" --targets "Id"="$JOB_NAME","Arn"="$LAMBDA_ARN","Input"=`{\"jobName\":\"$JOB_NAME\"}`
+              aws events put-targets --rule "$JOB_NAME" --targets "Id"="$JOB_NAME","Arn"="$LAMBDA_ARN","Input"=`{\"jobName\":\"$JOB_NAME\"}`
             fi
             
           done
