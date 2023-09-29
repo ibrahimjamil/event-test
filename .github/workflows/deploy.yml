@@ -145,7 +145,7 @@ jobs:
               --targets "[{
               "Arn":"$LAMBDA_ARN",
               "Id":"$JOB_NAME",
-              "Input":"{\"jobName\":\"$JOB_NAME\"}""
+              "Input":"{\"jobName\":\"$JOB_NAME\"}"
               }]
             fi
             
