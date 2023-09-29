@@ -1,4 +1,4 @@
-module gitlab.com/neocharge/neo-event-scheduler
+module gitlab.com/event-test
 
 go 1.18
 
