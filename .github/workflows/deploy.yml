@@ -36,13 +36,6 @@ jobs:
         run: |
           zip -r event-webhook-v1.zip .
 
-      - name: Set Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-west-1                 # Same with the lambda function region
-
       - name: Upload to AWS S3
         working-directory: ${{ github.workspace }}
         run: |
@@ -98,10 +91,11 @@ jobs:
       - name: Update CloudWatch Event Rules
         if: steps.lambda_check.outputs.function_exists == 'true'
         working-directory: ${{ github.workspace }}
+        env:
+          LAMBDA_ARN: ${{ secrets.LAMBDA_ARN }}
         run: |
           # Loop through each job in the config.yml
           LENGTH=$(yq eval '.jobs | length' config.yml)
-          echo "$LENGTH"
           # Initialize an index variable
           i=0
 
@@ -111,14 +105,10 @@ jobs:
             # Fetch the job name and schedule
             JOB_NAME=$(yq eval ".jobs[$i].name" config.yml)
             JOB_SCHEDULE=$(yq eval ".jobs[$i].schedule" config.yml)
-
-            echo "$JOB_NAME"
-            echo "$JOB_SCHEDULE"
             
             # Check if the rule with the given name already exists
             EXISTS=$(aws events describe-rule --name "$JOB_NAME" || echo "no")
             
-            LAMBDA_ARN=arn:aws:lambda:us-west-1:912165650675:function:event_lambda_function-dev
 
             if [[ $EXISTS == "no" ]]; then
               
@@ -138,7 +128,7 @@ jobs:
             else
               # If the rule already exists, just update its schedule
               aws events put-rule --name "$JOB_NAME" --schedule-expression "$JOB_SCHEDULE"
-              
+
             # Decrement because yq index starts from 1
             i=$((i+1))
             fi

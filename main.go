@@ -39,37 +39,22 @@ func extractValueFromARN(arn string) (string, error) {
 }
 
 func handler(event events.CloudWatchEvent) (string, error) {
-	// Access the "EventName" field from the map
-
-	// fmt.Println("event", event)
-	// eventName, ok := event["jobName"].(string)
-	// if !ok {
-	// 	return "", fmt.Errorf("Failed to extract EventName from event")
-	// }
-
-	// Parse the CloudWatch event JSON into a Go struct
 	var eventName string
-	if len(event.Resources) > 0 {
-		arn := event.Resources[0]
-		value, err := extractValueFromARN(arn)
-		if err != nil {
-			fmt.Println("Error:", err)
-			return "", err
-		}
-		eventName = value
-	} else {
-		fmt.Println("No resources found in the CloudWatch event.")
-	}
-	// Use the eventName in your logic
-	// result := fmt.Sprintf("Received custom event: Name=%s", eventName)
-
-	// fmt.Printf("Received customize event: Name=%s", eventName)
-
-	// Get the broker endpoint
 	brokerEndpointIP := os.Getenv("MQ_ENDPOINT_IP")
 	brokerUsername := os.Getenv("BROKER_USERNAME")
 	brokerPassword := os.Getenv("BROKER_PASSWORD")
 	brokerEndpointIP = strings.TrimPrefix(brokerEndpointIP, "stomp+ssl://")
+
+	if len(event.Resources) > 0 {
+		arn := event.Resources[0]
+		value, err := extractValueFromARN(arn)
+		if err != nil {
+			return fmt.Sprintf("Failed to extract rule from rule resource event: %v", err), err
+		}
+		eventName = value
+	} else {
+		fmt.Println("No rule resources found in the CloudWatch event.")
+	}
 
 	// Create a tls dial and stomp connect to broker
 	netConn, err := tls.Dial("tcp", brokerEndpointIP, &tls.Config{})

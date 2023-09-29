@@ -1,6 +1,7 @@
+# Cron schedule must be valid
 jobs:
   - name: event_lambda_trigger_0
-    schedule: 'cron(*/30 * * * ? *)'
+    schedule: 'cron(*/20 * * * ? *)'
   - name: event_lambda_trigger_1
     schedule: 'cron(*/40 * * * ? *)'
   - name: event_lambda_trigger_2
