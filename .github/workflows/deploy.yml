@@ -100,14 +100,20 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           # Loop through each job in the config.yml
-          for i in $(yq eval '.jobs | length' config.yml); do
+          LENGTH=$(yq eval '.jobs | length' config.yml)
+          echo "$LENGTH"
+          # Initialize an index variable
+          i=0
+
+          # Use a while loop with a condition to check the index
+          while [ "$i" -lt "$LENGTH" ]; do
             
             # Decrement because yq index starts from 1
-            idx=$((i-1))
+            i=$((i-1))
             
             # Fetch the job name and schedule
-            JOB_NAME=$(yq eval ".jobs[$idx].name" config.yml)
-            JOB_SCHEDULE=$(yq eval ".jobs[$idx].schedule" config.yml)
+            JOB_NAME=$(yq eval ".jobs[$i].name" config.yml)
+            JOB_SCHEDULE=$(yq eval ".jobs[$i].schedule" config.yml)
 
             echo "$JOB_NAME"
             echo "$JOB_SCHEDULE"
