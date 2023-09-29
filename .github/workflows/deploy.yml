@@ -99,29 +99,33 @@ jobs:
         if: steps.lambda_check.outputs.function_exists == 'true'
         working-directory: ${{ github.workspace }}
         run: |
-          # Fetch all job names and schedules from config.yml
-          JOB_NAMES=($(yq eval '.jobs[].name' config.yml))
-          JOB_SCHEDULES=($(yq eval '.jobs[].schedule' config.yml))
+          # Loop through each job in the config.yml
+          for i in $(yq eval '.jobs | length' config.yml); do
+            
+            # Decrement because yq index starts from 1
+            idx=$((i-1))
+            
+            # Fetch the job name and schedule
+            JOB_NAME=$(yq eval ".jobs[$idx].name" config.yml)
+            JOB_SCHEDULE=$(yq eval ".jobs[$idx].schedule" config.yml)
 
-          # Define the Lambda ARN
-          LAMBDA_ARN=arn:aws:lambda:us-west-1:912165650675:function:event_lambda_function-dev
-
-          # Loop through each job and create/update the rules
-          for ((i=0; i<${#JOB_NAMES[@]}; i++)); do
-            JOB_NAME="${JOB_NAMES[i]}"
-            JOB_SCHEDULE="${JOB_SCHEDULES[i]}"
-
+            echo "$JOB_NAME"
+            echo "$JOB_SCHEDULE"
+            
             # Check if the rule with the given name already exists
             EXISTS=$(aws events describe-rule --name "$JOB_NAME" || echo "no")
+            
+            LAMBDA_ARN=arn:aws:lambda:us-west-1:912165650675:function:event_lambda_function-dev
 
             if [[ $EXISTS == "no" ]]; then
+              
               # If the rule doesn't exist, create a new one
               aws events put-rule --name "$JOB_NAME" --schedule-expression "$JOB_SCHEDULE" --state "ENABLED"
 
               # Create or update the CloudWatch Event Rule target
               aws events put-targets --rule "$JOB_NAME" --targets "Id"="$JOB_NAME","Arn"="$LAMBDA_ARN"
 
-              # Create AWS Lambda permission for this new rule
+              # Create AWS Lambda permission for this new rules
               aws lambda add-permission \
                 --function-name "event_lambda_function-dev" \
                 --statement-id "$JOB_NAME-permission" \
@@ -132,5 +136,5 @@ jobs:
               # If the rule already exists, just update its schedule
               aws events put-rule --name "$JOB_NAME" --schedule-expression "$JOB_SCHEDULE"
             fi
+            
           done
-
