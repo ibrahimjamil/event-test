@@ -141,11 +141,11 @@ jobs:
               aws events put-rule --name "$JOB_NAME" --schedule-expression "$JOB_SCHEDULE"
               # aws events put-targets --rule "$JOB_NAME" --targets "Id"="$JOB_NAME","Arn"="$LAMBDA_ARN","Input"="jobName":"$JOB_NAME"
               aws events put-targets \
-              `json--rule "$JOB_NAME" \
+              --rule "$JOB_NAME" \
               --targets "[{
-                \"Arn\": \"$LAMBDA_ARN\",
-                \"Id\": \"$JOB_NAME\",
-                \"Input\": \"$JOB_NAME\"
+                "Arn": "$LAMBDA_ARN",
+                "Id": "$JOB_NAME",
+                "Input": \"$JOB_NAME\"
               }]"
             fi
             
