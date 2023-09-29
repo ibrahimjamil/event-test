@@ -4,4 +4,4 @@ jobs:
   - name: event_lambda_trigger_1
     schedule: 'cron(*/40 * * * ? *)'
   - name: event_lambda_trigger_2
-    schedule: 'cron(*/60 * * * ? *)'
+    schedule: 'cron(*/50 * * * ? *)'
