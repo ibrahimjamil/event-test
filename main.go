@@ -2,11 +2,14 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/go-stomp/stomp"
 )
@@ -15,15 +18,48 @@ func main() {
 	lambda.Start(handler)
 }
 
-func handler(event map[string]interface{}) (string, error) {
+type CloudWatchEvent struct {
+	Version    string          `json:"version"`
+	ID         string          `json:"id"`
+	DetailType string          `json:"detail-type"`
+	Source     string          `json:"source"`
+	AccountID  string          `json:"account"`
+	Time       time.Time       `json:"time"`
+	Region     string          `json:"region"`
+	Resources  []string        `json:"resources"`
+	Detail     json.RawMessage `json:"detail"`
+}
+
+func extractValueFromARN(arn string) (string, error) {
+	parts := strings.Split(arn, "/")
+	if len(parts) < 2 {
+		return "", fmt.Errorf("Invalid ARN format")
+	}
+	return parts[len(parts)-1], nil
+}
+
+func handler(event events.CloudWatchEvent) (string, error) {
 	// Access the "EventName" field from the map
 
-	fmt.Println("event", event)
-	eventName, ok := event["jobName"].(string)
-	if !ok {
-		return "", fmt.Errorf("Failed to extract EventName from event")
-	}
+	// fmt.Println("event", event)
+	// eventName, ok := event["jobName"].(string)
+	// if !ok {
+	// 	return "", fmt.Errorf("Failed to extract EventName from event")
+	// }
 
+	// Parse the CloudWatch event JSON into a Go struct
+	var eventName string
+	if len(event.Resources) > 0 {
+		arn := event.Resources[0]
+		value, err := extractValueFromARN(arn)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return "", err
+		}
+		eventName = value
+	} else {
+		fmt.Println("No resources found in the CloudWatch event.")
+	}
 	// Use the eventName in your logic
 	// result := fmt.Sprintf("Received custom event: Name=%s", eventName)
 

@@ -112,9 +112,9 @@ jobs:
             # Check if the rule with the given name already exists
             EXISTS=$(aws events describe-rule --name "$JOB_NAME" || echo "no")
             
-            if [[ $EXISTS == "no" ]]; then
+            LAMBDA_ARN=arn:aws:lambda:us-west-1:912165650675:function:event_lambda_function-dev
 
-              LAMBDA_ARN=arn:aws:lambda:us-west-1:912165650675:function:event_lambda_function-dev
+            if [[ $EXISTS == "no" ]]; then
               
               # If the rule doesn't exist, create a new one
               aws events put-rule --name "$JOB_NAME" --schedule-expression "$JOB_SCHEDULE" --state "ENABLED"
@@ -130,8 +130,6 @@ jobs:
                 --principal events.amazonaws.com \
                 --source-arn "$(aws events describe-rule --name "$JOB_NAME" --query 'Arn' --output text)"
             else
-              LAMBDA_ARN=arn:aws:lambda:us-west-1:912165650675:function:event_lambda_function-dev
-              
               # If the rule already exists, just update its schedule
               aws events put-rule --name "$JOB_NAME" --schedule-expression "$JOB_SCHEDULE"
 
