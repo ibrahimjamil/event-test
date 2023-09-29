@@ -128,7 +128,7 @@ jobs:
               # Create or update the CloudWatch Event Rule target with input
               aws events put-targets --rule "$JOB_NAME" --targets "Id"="1","Arn"="$LAMBDA_ARN","Input"=`{\"jobName\":\"$JOB_NAME\"}`
 
-              # Create AWS Lambda permission for this new rule
+              # Create AWS Lambda permission for this new rules
               aws lambda add-permission \
                 --function-name "event_lambda_function-dev" \
                 --statement-id "$JOB_NAME-permission" \
