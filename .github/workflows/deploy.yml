@@ -143,9 +143,9 @@ jobs:
               aws events put-targets
               --rule "$JOB_NAME"
               --targets "[{
-              "Arn": "$LAMBDA_ARN",
-              "Id": "$JOB_NAME",
-              "Input": "\"$JOB_NAME\""
+              "Arn":"$LAMBDA_ARN",
+              "Id":"$JOB_NAME",
+              "Input":`{\"jobName\":\"$JOB_NAME\"}`
               }]
             fi
             
