@@ -42,6 +42,7 @@ func handler(event events.CloudWatchEvent) (string, error) {
 	brokerPassword := os.Getenv("BROKER_PASSWORD")
 	brokerEndpointIP = strings.TrimPrefix(brokerEndpointIP, "stomp+ssl://")
 
+	fmt.Println(event)
 	if len(event.Resources) > 0 {
 		resourceEvent := event.Resources[0]
 		value, err := extractJobNameFromEvent(resourceEvent)
