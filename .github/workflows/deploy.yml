@@ -94,9 +94,6 @@ jobs:
       - name: Install yq
         run: |
           sudo snap install yq
-      - name: Set target.json path
-        id: set-target-json
-        run: echo "${{ github.workspace }}/target.json"
 
       - name: Update CloudWatch Event Rules
         if: steps.lambda_check.outputs.function_exists == 'true'
@@ -120,17 +117,10 @@ jobs:
               LAMBDA_ARN=arn:aws:lambda:us-west-1:912165650675:function:event_lambda_function-dev
               
               # If the rule doesn't exist, create a new one
-              aws events put-rule --name "$JOB_NAME" --schedule-expression "$JOB_SCHEDULE"
-              
-              # Assuming you want to associate this new rule with the same Lambda function
-              # Get the ARN of your Lambda function
+              aws events put-rule --name "$JOB_NAME" --schedule-expression "$JOB_SCHEDULE" --state "ENABLED"
 
-              # Define the input data in JSON format with "jobName" key
-              INPUT_JSON="{\"jobName\": \"$JOB_NAME\"}"
-
-              # Create or update the CloudWatch Event Rule target with input
-              TARGET_JSON=$(cat target.json)
-              aws events put-targets --cli-input-json "$TARGET_JSON"
+              # Create or update the CloudWatch Event Rule target
+              aws events put-targets --rule "$JOB_NAME" --targets "Id"="$JOB_NAME","Arn"="$LAMBDA_ARN","RoleArn"="arn:aws:iam::912165650675:user/ibrahim","Input"=`{\"jobName\":\"$JOB_NAME\"}`
 
               # Create AWS Lambda permission for this new rules
               aws lambda add-permission \
@@ -140,10 +130,13 @@ jobs:
                 --principal events.amazonaws.com \
                 --source-arn "$(aws events describe-rule --name "$JOB_NAME" --query 'Arn' --output text)"
             else
-              # If the rule already exists, just update its schedule
               LAMBDA_ARN=arn:aws:lambda:us-west-1:912165650675:function:event_lambda_function-dev
+              
+              # If the rule already exists, just update its schedule
               aws events put-rule --name "$JOB_NAME" --schedule-expression "$JOB_SCHEDULE"
-              aws events put-targets --rule "$JOB_NAME" --targets "Id"="$JOB_NAME","Arn"="$LAMBDA_ARN","Input"=`{\"jobName\":\"$JOB_NAME\"}`
+
+              # Update the CloudWatch Event Rule target
+              aws events put-targets --rule "$JOB_NAME" --targets "Id"="$JOB_NAME","Arn"="$LAMBDA_ARN"
             fi
             
           done
