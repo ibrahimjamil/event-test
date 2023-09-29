@@ -94,6 +94,9 @@ jobs:
       - name: Install yq
         run: |
           sudo snap install yq
+      - name: Set target.json path
+        id: set-target-json
+        run: echo "${{ github.workspace }}/target.json"
 
       - name: Update CloudWatch Event Rules
         if: steps.lambda_check.outputs.function_exists == 'true'
@@ -126,7 +129,7 @@ jobs:
               INPUT_JSON="{\"jobName\": \"$JOB_NAME\"}"
 
               # Create or update the CloudWatch Event Rule target with input
-              aws events put-targets --rule "$JOB_NAME" --targets "Id"="1","Arn"="$LAMBDA_ARN","Input"=`{"jobName":"event_lambda_trigger"}` --debug
+              aws events put-targets --cli-input-json file://${{ steps.set-target-json.outputs.stdout }}
 
               # Create AWS Lambda permission for this new rules
               aws lambda add-permission \

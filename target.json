@@ -1,0 +1,9 @@
+{
+    "Rule": "event_lambda_trigger",
+    "Targets": [{
+            "Id": "event_lambda_trigger",
+            "Arn": "arn:aws:lambda:us-west-1:912165650675:function:event_lambda_function-dev",
+            "Input": "{\"jobName\":\"event_lambda_trigger\"}"
+        }
+    ]
+}
