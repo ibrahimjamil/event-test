@@ -112,5 +112,5 @@ func handler(event events.CloudWatchEvent) (string, error) {
 		break
 	}
 
-	return fmt.Sprintf("Received custom events: Name=%s", jobName), nil
+	return fmt.Sprintf("Received custom event: Name=%s", jobName), nil
 }
