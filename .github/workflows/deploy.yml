@@ -130,7 +130,7 @@ jobs:
 
               # Create or update the CloudWatch Event Rule target with input
               TARGET_JSON=$(cat target.json)
-              aws events put-targets --rule "$JOB_NAME" --targets "$TARGET_JSON"
+              aws events put-targets --cli-input-json "$TARGET_JSON"
 
               # Create AWS Lambda permission for this new rules
               aws lambda add-permission \
