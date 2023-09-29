@@ -3,3 +3,5 @@ jobs:
     schedule: 'cron(*/1 * * * ? *)'
   - name: event_lambda_trigger_1
     schedule: 'cron(*/2 * * * ? *)'
+  - name: event_lambda_trigger_2
+    schedule: 'cron(*/2 * * * ? *)'
