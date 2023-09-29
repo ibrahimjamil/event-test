@@ -30,28 +30,26 @@ type CloudWatchEvent struct {
 	Detail     json.RawMessage `json:"detail"`
 }
 
-func extractValueFromARN(arn string) (string, error) {
-	parts := strings.Split(arn, "/")
-	if len(parts) < 2 {
-		return "", fmt.Errorf("Invalid ARN format")
-	}
-	return parts[len(parts)-1], nil
+func extractJobNameFromEvent(resourceEvent string) (string, error) {
+	jobName := strings.Split(resourceEvent, "/")
+	return jobName[len(jobName)-1], nil
 }
 
 func handler(event events.CloudWatchEvent) (string, error) {
-	var eventName string
+	var jobName string
 	brokerEndpointIP := os.Getenv("MQ_ENDPOINT_IP")
 	brokerUsername := os.Getenv("BROKER_USERNAME")
 	brokerPassword := os.Getenv("BROKER_PASSWORD")
 	brokerEndpointIP = strings.TrimPrefix(brokerEndpointIP, "stomp+ssl://")
 
 	if len(event.Resources) > 0 {
-		arn := event.Resources[0]
-		value, err := extractValueFromARN(arn)
+		resourceEvent := event.Resources[0]
+		value, err := extractJobNameFromEvent(resourceEvent)
 		if err != nil {
-			return fmt.Sprintf("Failed to extract rule from rule resource event: %v", err), err
+			return fmt.Sprintf("Failed to extract job name from event: %v", err), err
 		}
-		eventName = value
+		jobName = value
+		fmt.Printf("Received job name=%s", jobName)
 	} else {
 		fmt.Println("No rule resources found in the CloudWatch event.")
 	}
@@ -62,7 +60,7 @@ func handler(event events.CloudWatchEvent) (string, error) {
 		log.Fatalln(err.Error())
 	}
 	defer netConn.Close()
-	fmt.Printf("Received customize event: Name=%s", eventName)
+
 	conn, err := stomp.Connect(netConn,
 		stomp.ConnOpt.Login(brokerUsername, brokerPassword))
 	if err != nil {
@@ -71,11 +69,11 @@ func handler(event events.CloudWatchEvent) (string, error) {
 	}
 	defer conn.Disconnect()
 
-	fmt.Print("connection established")
+	fmt.Print("connection established to broker....")
 
 	// Send a message to a queue on the broker
 	queueName := "Demo-Queue"
-	message := eventName
+	message := jobName
 	err = conn.Send(
 		queueName,
 		"text/plain",
@@ -97,7 +95,7 @@ func handler(event events.CloudWatchEvent) (string, error) {
 	}
 	defer sub.Unsubscribe()
 
-	fmt.Print("Connection established, waiting for messages...\n")
+	fmt.Print("Connection established for recieving, waiting for messages...\n")
 
 	// Listen for and process incoming messages
 	var messageBody string
@@ -114,5 +112,5 @@ func handler(event events.CloudWatchEvent) (string, error) {
 		break
 	}
 
-	return fmt.Sprintf("Received custom events: Name=%s", eventName), nil
+	return fmt.Sprintf("Received custom events: Name=%s", jobName), nil
 }
