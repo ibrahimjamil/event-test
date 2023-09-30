@@ -6,3 +6,13 @@ jobs:
     schedule: 'cron(*/1 * * * ? *)'
   - name: event_lambda_trigger_2
     schedule: 'cron(*/1 * * * ? *)'
+  - name: event_lambda_trigger_3
+    schedule: 'cron(*/1 * * * ? *)'
+  - name: event_lambda_trigger_4
+    schedule: 'cron(*/1 * * * ? *)'
+  - name: event_lambda_trigger_5
+    schedule: 'cron(*/1 * * * ? *)'
+  - name: event_lambda_trigger_6
+    schedule: 'cron(*/1 * * * ? *)'
+  - name: event_lambda_trigger_7
+    schedule: 'cron(*/1 * * * ? *)'
