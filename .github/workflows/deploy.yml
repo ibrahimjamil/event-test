@@ -108,7 +108,6 @@ jobs:
             
             # Check if the rule with the given name already exists
             EXISTS=$(aws events describe-rule --name "$JOB_NAME" || echo "no")
-            
 
             if [[ $EXISTS == "no" ]]; then
               
