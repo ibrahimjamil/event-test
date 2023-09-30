@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -35,25 +36,19 @@ func extractJobNameFromEvent(resourceEvent string) (string, error) {
 	return jobName[len(jobName)-1], nil
 }
 
-func handler(event events.CloudWatchEvent) (string, error) {
+func handleEvent(resourceEvent string) (string, error) {
 	var jobName string
 	brokerEndpointIP := os.Getenv("MQ_ENDPOINT_IP")
 	brokerUsername := os.Getenv("BROKER_USERNAME")
 	brokerPassword := os.Getenv("BROKER_PASSWORD")
 	brokerEndpointIP = strings.TrimPrefix(brokerEndpointIP, "stomp+ssl://")
 
-	fmt.Println(event)
-	if len(event.Resources) > 0 {
-		resourceEvent := event.Resources[0]
-		value, err := extractJobNameFromEvent(resourceEvent)
-		if err != nil {
-			return fmt.Sprintf("Failed to extract job name from event: %v", err), err
-		}
-		jobName = value
-		fmt.Printf("Received job name=%s", jobName)
-	} else {
-		fmt.Println("No rule resources found in the CloudWatch event.")
+	value, err := extractJobNameFromEvent(resourceEvent)
+	if err != nil {
+		return fmt.Sprintf("Failed to extract job name from event: %v", err), err
 	}
+	jobName = value
+	fmt.Printf("Received job name=%s", jobName)
 
 	// Create a tls dial and stomp connect to broker
 	netConn, err := tls.Dial("tcp", brokerEndpointIP, &tls.Config{})
@@ -114,4 +109,30 @@ func handler(event events.CloudWatchEvent) (string, error) {
 	}
 
 	return fmt.Sprintf("Received custom event: Name=%s", jobName), nil
+}
+
+func handler(event events.CloudWatchEvent) (string, error) {
+
+	if len(event.Resources) == 0 {
+		return "No rule resources found in the CloudWatch event.", nil
+	}
+
+	resourceEvent := event.Resources[0]
+	var wg sync.WaitGroup
+
+	// Process the event concurrently in a Goroutine
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		result, err := handleEvent(resourceEvent)
+		if err != nil {
+			fmt.Printf("Error processing event: %v\n", err)
+			return
+		}
+		fmt.Println(result)
+	}()
+
+	wg.Wait() // Wait for all Goroutines to finish
+
+	return "Event processing complete.", nil
 }
