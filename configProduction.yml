@@ -1,0 +1,6 @@
+# Cron schedule must be valid
+jobs:
+  - name: event_lambda_trigger_production_0
+    schedule: 'cron(*/1 * * * ? *)'
+  - name: event_lambda_trigger_production_1
+    schedule: 'cron(*/2 * * * ? *)'

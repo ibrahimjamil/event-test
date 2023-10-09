@@ -1,0 +1,130 @@
+name: Event-Job-Scheduling
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+
+    env:
+      TF_WORKSPACE: ${{ vars.TF_WORKSPACE }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      BUCKET_NAME: ${{ vars.AWS_BUCKET_NAME }}-${{ vars.TF_WORKSPACE }}
+      LAMBDA_FUNCTION_NAME: ${{ vars.AWS_LAMBDA_FUNCTION }}-${{ vars.TF_WORKSPACE }}
+      LAMBDA_ARN: ${{ secrets.LAMBDA_ARN }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Get Credentionals
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}                # Same with the lambda function region
+
+      - name: Build Golang code
+        working-directory: ${{ github.workspace }}  # Set the working directory to your Golang code directory
+        run: |
+          export GOOS=linux
+          export GOARCH=amd64
+          export CGO_ENABLED=0
+          go build -o bootstrap main.go
+
+      - name: Zip Golang build files
+        working-directory: ${{ github.workspace }}
+        run: |
+          zip -r event-scheduler-v1.zip .
+
+      - name: Upload to AWS S3
+        working-directory: ${{ github.workspace }}
+        run: |
+          bucket_name="${{ env.BUCKET_NAME }}"
+          region="${{ env.AWS_REGION }}"
+          
+          # Upload the object to the S3 bucket
+          aws s3 cp event-scheduler-v1.zip "s3://$bucket_name/$object_name"
+
+        # Lambda function exists check required as some times terraform resources may
+        # be down at all so in that case we don't want to update that function
+        # or run next job named Update Lambda Function. We still somehow want to upload
+        # zip to s3 as its independent of terraform resources which we did before.
+      - name: Check if Lambda function exists
+        id: lambda_check
+        run: |
+          lambda_function_name="${{ env.LAMBDA_FUNCTION_NAME }}"
+          if aws lambda get-function --function-name "$lambda_function_name" >/dev/null 2>&1; then
+            echo "::set-output name=function_exists::true"
+          else
+            echo "::set-output name=function_exists::false"
+          fi
+
+      - name: Update Lambda Function
+        if: steps.lambda_check.outputs.function_exists == 'true'
+        run: |
+          lambda_function_name="${{ env.LAMBDA_FUNCTION_NAME }}"
+          bucket_name="${{ env.BUCKET_NAME }}"
+          object_name="event-scheduler-v1.zip"
+
+          # Update the Lambda function code with the latest version from S3
+          aws lambda update-function-code \
+            --function-name "$lambda_function_name" \
+            --s3-bucket "$bucket_name" \
+            --s3-key "$object_name"
+
+      - name: Install yq
+        run: |
+          sudo snap install yq
+
+      - name: Update CloudWatch Event Rules
+        if: steps.lambda_check.outputs.function_exists == 'true'
+        working-directory: ${{ github.workspace }}
+        run: |
+          LAMBDA_FUNCTION_NAME="${{ env.LAMBDA_FUNCTION_NAME }}"
+          LAMBDA_ARN="${{ env.LAMBDA_ARN }}"
+          
+          # Loop through each job in the configStaging.yml
+          LENGTH=$(yq eval '.jobs | length' configStaging.yml)
+          # Initialize an index variable
+          i=0
+
+          # Use a while loop with a condition to check the index
+          while [ "$i" -lt "$LENGTH" ]; do
+            
+            # Fetch the job name and schedule
+            JOB_NAME=$(yq eval ".jobs[$i].name" configStaging.yml)
+            JOB_SCHEDULE=$(yq eval ".jobs[$i].schedule" configStaging.yml)
+            
+            # Check if the rule with the given name already exists
+            EXISTS=$(aws events describe-rule --name "$JOB_NAME" || echo "no")
+
+            if [[ $EXISTS == "no" ]]; then
+              
+              # If the rule doesn't exist, create a new one
+              aws events put-rule --name "$JOB_NAME" --schedule-expression "$JOB_SCHEDULE" --state "ENABLED"
+
+              # Create or update the CloudWatch Event Rule target
+              aws events put-targets --rule "$JOB_NAME" --targets "Id"="$JOB_NAME","Arn"="$LAMBDA_ARN"
+
+              # Create AWS Lambda permission for this new rules
+              aws lambda add-permission \
+                --function-name "$LAMBDA_FUNCTION_NAME" \
+                --statement-id "$JOB_NAME-permission" \
+                --action lambda:InvokeFunction \
+                --principal events.amazonaws.com \
+                --source-arn "$(aws events describe-rule --name "$JOB_NAME" --query 'Arn' --output text)"
+            else
+              # If the rule already exists, just update its schedule
+              aws events put-rule --name "$JOB_NAME" --schedule-expression "$JOB_SCHEDULE"
+
+            # Decrement because yq index starts from 1
+            i=$((i+1))
+            fi
+          done
